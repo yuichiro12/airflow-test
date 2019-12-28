@@ -1,20 +1,32 @@
 version: '3.7'
 
 services:
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - mysql:/var/lib/mysql
+    ports:
+      - $DOCKER_HOST_DB_PORT:3306
+    environment:
+      MYSQL_DATABASE: airflow
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    command: mysqld --character-set-server=utf8mb4 --explicit_defaults_for_timestamp=true
+  mysql-initializer:
+    build: .
+    depends_on:
+      - mysql
+    command: airflow initdb
   webserver:
     build: .
     ports:
       - 8080:8080
     volumes:
       - ./dags:/root/airflow/dags
-  db:
-    image: mysql:5.7
-    volumes:
-      - db:/var/lib/mysql
-    ports:
-      - $DOCKER_HOST_DB_PORT:3306
+    depends_on:
+      - mysql-initializer
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+      AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
 volumes:
-  db:
+  mysql:
     driver: local
