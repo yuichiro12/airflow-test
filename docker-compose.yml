@@ -11,22 +11,45 @@ services:
       MYSQL_DATABASE: airflow
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
     command: mysqld --character-set-server=utf8mb4 --explicit_defaults_for_timestamp=true
-  mysql-initializer:
+  dbinit:
     build: .
     depends_on:
       - mysql
+    # 初回のみ行われるmysqlのdb作成を待つ
+    entrypoint: /usr/local/scripts/wait-for-mysql.sh
     command: airflow initdb
-  webserver:
-    build: .
-    ports:
-      - 8080:8080
     volumes:
-      - ./dags:/root/airflow/dags
-    depends_on:
-      - mysql-initializer
+      - ./scripts:/usr/local/scripts
     environment:
       AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
       AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+  webserver:
+    build: .
+    volumes:
+      - ./dags:/root/airflow/dags
+      - ./scripts:/usr/local/scripts
+    ports:
+      - 8080:8080
+    depends_on:
+      - dbinit
+    # 初回のみ行われる`airflow initdb`の完了を待つ
+    entrypoint: /usr/local/scripts/wait-for-dbinit.sh
+    command: airflow webserver -p 8080
+    environment:
+      AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+  scheduler:
+    build: .
+    volumes:
+      - ./dags:/root/airflow/dags
+      - ./scripts:/usr/local/scripts
+    depends_on:
+      - dbinit
+    environment:
+      AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+    entrypoint: /usr/local/scripts/wait-for-dbinit.sh
+    command: airflow scheduler
 volumes:
   mysql:
     driver: local

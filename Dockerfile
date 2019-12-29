@@ -8,5 +8,5 @@ RUN apt-get update && apt-get install -y default-libmysqlclient-dev supervisor
 COPY ./requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 COPY config/airflow.cfg $AIRFLOW_HOME/airflow.cfg
-COPY config/supervisord.conf /etc/supervisord.conf
-CMD supervisord -c /etc/supervisord.conf
+COPY dags $AIRFLOW_HOME/dags
+CMD airflow scheduler
