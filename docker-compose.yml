@@ -10,6 +10,7 @@ services:
     environment:
       MYSQL_DATABASE: airflow
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    # https://airflow.apache.org/docs/stable/howto/initialize-database.html
     command: mysqld --character-set-server=utf8mb4 --explicit_defaults_for_timestamp=true
   dbinit:
     build: .
@@ -17,7 +18,6 @@ services:
       - mysql
     # 初回のみ行われるmysqlのdb作成を待つ
     entrypoint: /usr/local/scripts/wait-for-mysql.sh
-    command: airflow initdb
     volumes:
       - ./scripts:/usr/local/scripts
     environment:

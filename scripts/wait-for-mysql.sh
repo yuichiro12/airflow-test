@@ -7,4 +7,9 @@ until python -c "import MySQLdb; MySQLdb.connect(user='root', host='mysql', db='
 done
 
 >&2 echo "MySQL is up - executing command"
-exec $@
+#cmd="$*"
+#exec $cmd
+
+airflow initdb
+nc -lp 10000
+nc -lp 20000
