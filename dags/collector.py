@@ -25,8 +25,10 @@ client = boto3.client(
     region_name="us-west-1",
 )
 
+# DAG作成
 dag = DAG('collector', default_args=default_args, schedule_interval=timedelta(days=1))
 
+# ECS task定義
 task_definition = "taskdef-airflow-test-dev-aece9bcd"
 cluster = "cluster-airflow-test-dev"
 overrides = {
@@ -36,6 +38,7 @@ overrides = {
     }]
 }
 
+# Operator作成
 t1 = ECSOperator(
     task_id="run_collector",
     dag=dag,
