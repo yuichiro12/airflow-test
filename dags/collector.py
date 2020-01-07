@@ -18,7 +18,7 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
-client = boto3.client(
+ecs = boto3.client(
     service_name="ecs",
     aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
     aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
@@ -29,7 +29,7 @@ client = boto3.client(
 dag = DAG('collector', default_args=default_args, schedule_interval=timedelta(days=1))
 
 # ECS task定義
-task_definition = "taskdef-airflow-test-dev-aece9bcd"
+task_definition = "airflow-test-dev"
 cluster = "cluster-airflow-test-dev"
 overrides = {
     'containerOverrides': [{
@@ -38,7 +38,33 @@ overrides = {
     }]
 }
 
+# default sessionにregionは保存されない？
+ec2 = boto3.client(
+    service_name='ec2',
+    region_name="us-west-1",
+)
+# https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html#EC2.Client.describe_subnets
+subnets = ec2.describe_subnets(Filters=[
+    {
+        "Name": "vpc-id",
+        "Values": [
+            os.environ['VPC_ID'],
+        ]
+    }
+])['Subnets']
+subnet_ids = list(map(lambda subnet: subnet['SubnetId'], subnets))
+
+network_configuration = {
+    "awsvpcConfiguration": {
+        "subnets": subnet_ids,
+        "securityGroups": ["sg-07381accdf2c5b195"],
+
+        "assignPublicIp": "ENABLED",
+    }
+}
+
 # Operator作成
+
 t1 = ECSOperator(
     task_id="run_collector",
     dag=dag,
@@ -46,6 +72,8 @@ t1 = ECSOperator(
     cluster=cluster,
     overrides=overrides,
     region_name="us-west-1",
+    launch_type="FARGATE",
+    network_configuration=network_configuration,
 )
 # t2 = ECSOperator(
 #     task_id='sleep',

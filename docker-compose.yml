@@ -23,6 +23,7 @@ services:
     environment:
       AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
       AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+      VPC_ID: $VPC_ID
   webserver:
     build: .
     volumes:
@@ -38,6 +39,7 @@ services:
     environment:
       AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
       AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+      VPC_ID: $VPC_ID
   scheduler:
     build: .
     volumes:
@@ -48,6 +50,7 @@ services:
     environment:
       AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
       AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+      VPC_ID: $VPC_ID
     entrypoint: /usr/local/scripts/wait-for-dbinit.sh
     command: airflow scheduler
 volumes:
