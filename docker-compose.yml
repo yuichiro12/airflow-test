@@ -1,10 +1,11 @@
 version: '3.7'
 
 services:
-  mysql:
+  db:
     image: mysql:5.7
     volumes:
-      - mysql:/var/lib/mysql
+      - db:/var/lib/mysql
+      - ./mysql/conf.d:/etc/mysql/conf.d
     ports:
       - $DOCKER_HOST_DB_PORT:3306
     environment:
@@ -15,7 +16,7 @@ services:
   dbinit:
     build: .
     depends_on:
-      - mysql
+      - db
     # 初回のみ行われるmysqlのdb作成を待つ
     entrypoint: /usr/local/scripts/wait-for-mysql.sh
     volumes:
@@ -54,5 +55,5 @@ services:
     entrypoint: /usr/local/scripts/wait-for-dbinit.sh
     command: airflow scheduler
 volumes:
-  mysql:
+  db:
     driver: local
